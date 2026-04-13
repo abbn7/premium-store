@@ -1,0 +1,72 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import ThemeToggle from './ThemeToggle';
+import type { SiteSettings } from '@/types';
+
+interface HeaderProps {
+  settings: SiteSettings | null;
+}
+
+export default function Header({ settings }: HeaderProps) {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  const storeName = settings?.store_name || 'Store';
+
+  return (
+    <header className={`header ${scrolled ? 'scrolled' : ''}`} id="main-header">
+      <div className="container">
+        <div className="header-inner">
+          <Link href="/" className="header-logo" id="header-logo">
+            {storeName}
+          </Link>
+
+          <nav className="header-nav" id="main-nav">
+            <Link href="/">Home</Link>
+            <Link href="/products">Shop</Link>
+            <Link href="/products?featured=true">Featured</Link>
+          </nav>
+
+          <div className="header-actions">
+            <ThemeToggle />
+            <button
+              className={`mobile-menu-btn ${mobileOpen ? 'active' : ''}`}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+              id="mobile-menu-toggle"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`} id="mobile-menu">
+        <Link href="/" onClick={() => setMobileOpen(false)}>Home</Link>
+        <Link href="/products" onClick={() => setMobileOpen(false)}>Shop</Link>
+        <Link href="/products?featured=true" onClick={() => setMobileOpen(false)}>Featured</Link>
+      </div>
+    </header>
+  );
+}
