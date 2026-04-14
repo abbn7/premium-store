@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, calculateDiscount, getStockStatus } from '@/lib/utils';
 import FadeIn from '@/components/animations/FadeIn';
 import type { Product } from '@/types';
+import { useCart } from '@/hooks/useCart';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -15,7 +16,9 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ product, currencySymbol, whatsappUrl }: ProductDetailClientProps) {
+  const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const images = product.images || [];
   const discount = product.compare_at_price
     ? calculateDiscount(product.price, product.compare_at_price)
@@ -162,15 +165,35 @@ export default function ProductDetailClient({ product, currencySymbol, whatsappU
               <p className="product-info-desc">{product.description}</p>
             )}
 
-            <div className="product-actions">
+            <div className="product-actions" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                  <button 
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    style={{ padding: 'var(--space-2) var(--space-4)', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                  >-</button>
+                  <span style={{ padding: '0 var(--space-2)', minWidth: '2rem', textAlign: 'center' }}>{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(q => Math.min(product.stock_quantity, q + 1))}
+                    style={{ padding: 'var(--space-2) var(--space-4)', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                  >+</button>
+                </div>
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={() => addItem(product, quantity)}
+                  disabled={product.stock_quantity <= 0}
+                  style={{ flex: 1 }}
+                >
+                  Add to Cart
+                </button>
+              </div>
               <button
-                className="btn btn-primary btn-lg"
+                className="btn btn-secondary btn-lg"
                 onClick={handleBuyNow}
                 disabled={product.stock_quantity <= 0}
                 id="buy-now-btn"
-                style={{ flex: 1 }}
               >
-                {product.stock_quantity <= 0 ? 'Out of Stock' : 'Buy Now'}
+                Buy on WhatsApp
               </button>
             </div>
 

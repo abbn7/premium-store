@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
 import type { SiteSettings } from '@/types';
+import { useCart } from '@/hooks/useCart';
 
 interface HeaderProps {
   settings: SiteSettings | null;
 }
 
 export default function Header({ settings }: HeaderProps) {
+  const { totalItems, setIsCartOpen } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -47,6 +49,18 @@ export default function Header({ settings }: HeaderProps) {
           </nav>
 
           <div className="header-actions">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              aria-label="Open cart"
+            >
+              <span className="text-xl">🛒</span>
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
             <ThemeToggle />
             <button
               className={`mobile-menu-btn ${mobileOpen ? 'active' : ''}`}

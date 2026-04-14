@@ -4,6 +4,8 @@ import { getSettings } from '@/lib/actions/settings';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
+import { CartProvider } from '@/hooks/useCart';
+import CartDrawer from '@/components/shop/CartDrawer';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -33,10 +35,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <AnnouncementBar settings={settings} />
-        <Header settings={settings} />
-        <main>{children}</main>
-        <Footer settings={settings} />
+        <CartProvider>
+          <AnnouncementBar settings={settings} />
+          <Header settings={settings} />
+          <main>{children}</main>
+          <CartDrawer currencySymbol={settings?.currency_symbol || '$'} />
+          <Footer settings={settings} />
+        </CartProvider>
       </body>
     </html>
   );

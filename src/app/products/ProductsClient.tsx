@@ -20,6 +20,7 @@ export default function ProductsClient({ products, categories, currencySymbol }:
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -30,6 +31,14 @@ export default function ProductsClient({ products, categories, currencySymbol }:
 
     if (selectedCategory !== 'all') {
       result = result.filter(p => p.category?.slug === selectedCategory);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.description?.toLowerCase().includes(query)
+      );
     }
 
     switch (sortBy) {
@@ -91,11 +100,30 @@ export default function ProductsClient({ products, categories, currencySymbol }:
             </FadeIn>
           )}
 
-          {/* Sort & Count */}
+          {/* Search & Sort Bar */}
           <div className="products-filter-bar" id="products-filter-bar">
-            <span className="filter-count">
-              {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flex: 1 }}>
+              <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--space-2) var(--space-4)',
+                    paddingLeft: 'var(--space-10)',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-bg-secondary)',
+                  }}
+                />
+                <span style={{ position: 'absolute', left: 'var(--space-4)', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+              </div>
+              <span className="filter-count">
+                {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+              </span>
+            </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}

@@ -10,18 +10,20 @@ export async function getProducts(options?: {
   featured?: boolean;
   limit?: number;
   activeOnly?: boolean;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: 'newest' | 'price-low' | 'price-high' | 'featured';
 }) {
   const supabase = createServerClient();
   let query = supabase
     .from('products')
     .select(`
       *,
-      category:categories(*),
+      category:categories!inner(*),
       images:product_images(*),
       reviews:reviews(rating)
-    `)
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false });
+    `);
 
   if (options?.activeOnly !== false) {
     query = query.eq('is_active', true);
@@ -29,6 +31,36 @@ export async function getProducts(options?: {
   if (options?.featured) {
     query = query.eq('is_featured', true);
   }
+  if (options?.categorySlug) {
+    query = query.eq('categories.slug', options.categorySlug);
+  }
+  if (options?.search) {
+    query = query.ilike('name', `%${options.search}%`);
+  }
+  if (options?.minPrice !== undefined) {
+    query = query.gte('price', options.minPrice);
+  }
+  if (options?.maxPrice !== undefined) {
+    query = query.lte('price', options.maxPrice);
+  }
+
+  // Handle sorting
+  switch (options?.sort) {
+    case 'price-low':
+      query = query.order('price', { ascending: true });
+      break;
+    case 'price-high':
+      query = query.order('price', { ascending: false });
+      break;
+    case 'newest':
+      query = query.order('created_at', { ascending: false });
+      break;
+    case 'featured':
+    default:
+      query = query.order('is_featured', { ascending: false }).order('sort_order', { ascending: true });
+      break;
+  }
+
   if (options?.limit) {
     query = query.limit(options.limit);
   }
@@ -39,7 +71,6 @@ export async function getProducts(options?: {
     return [];
   }
 
-  // Calculate average rating for each product
   return (data || []).map(product => {
     const reviews = product.reviews || [];
     const avg_rating = reviews.length > 0
@@ -84,20 +115,6 @@ export async function getProductBySlug(slug: string) {
     images: (data.images || []).sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order),
     reviews: (reviews).filter((r: { is_approved: boolean }) => r.is_approved),
   };
-}
-
-export async function getProductsByCategory(categorySlug: string) {
-  const supabase = createServerClient();
-
-  const { data: category } = await supabase
-    .from('categories')
-    .select('id')
-    .eq('slug', categorySlug)
-    .single();
-
-  if (!category) return [];
-
-  return getProducts();
 }
 
 export async function createProduct(formData: FormData) {
